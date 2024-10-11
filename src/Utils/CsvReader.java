@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 public class CsvReader {
     public static String RUTA_USUARIOS = "C:\\Users\\jaime\\Desktop\\Curso Java Academy\\GestionUsuariosJava\\src\\Data\\usuarios.csv";
     public static String RUTA_GRUPOS = "C:\\Users\\jaime\\Desktop\\Curso Java Academy\\GestionUsuariosJava\\src\\Data\\grupos.csv";
+    public static String RUTA_DEPARTAMENTOS = "C:\\Users\\jaime\\Desktop\\Curso Java Academy\\GestionUsuariosJava\\src\\Data\\departamentos.csv";
 
     ////////////////////////////LECTURA Y ESCRITURA DE USUARIOS////////////////////////////////////////
 
@@ -191,5 +192,77 @@ public class CsvReader {
     // Convierte un objeto Grupo a una línea en formato CSV
     private static String convertirGrupoACsv(Grupo grupo) {
         return grupo.getId() + "," + grupo.getNombre() + "," + grupo.getDescripcion();
+    }
+
+    /////////////////////////////LECTURA Y ESCRITURA DE DEPARTAMENTOS/////////////////////////////////
+
+    public static List<Departamento> leerDepartamentos(String ruta) {
+        List<Departamento> departamentos = new ArrayList<>();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(RUTA_DEPARTAMENTOS))) {
+            String linea;
+            boolean primeraLinea = true;
+
+            while ((linea = br.readLine()) != null) {
+                if (primeraLinea) {
+                    primeraLinea = false;
+                    continue;
+                }
+
+                String[] campos = linea.split(",");
+
+                // Verificamos que hay al menos 3 campos: id, nombre y descripción
+                if (campos.length < 3) {
+                    System.err.println("Línea incompleta o formato incorrecto: " + linea);
+                    continue;
+                }
+
+                try {
+                    int id = Integer.parseInt(campos[0]); // Convertir a int
+                    String nombre = campos[1];
+                    String descripcion = campos[2];
+
+                    // Inicializar la lista de usuarios como vacía
+                    List<String> usuarios = new ArrayList<>();
+
+                    // Crear el departamento y agregarlo a la lista
+                    departamentos.add(new Departamento(id, nombre, descripcion, usuarios));
+                } catch (NumberFormatException e) {
+                    System.err.println("Error al convertir un campo numérico: " + e.getMessage() + " en la línea: " + linea);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return departamentos;
+    }
+
+    public static void escribirDepartamento(Departamento departamento) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(RUTA_DEPARTAMENTOS, true))) {
+            String linea = departamento.getId() + "," + departamento.getNombre() + "," + departamento.getDescripcion() + "," + String.join(";", departamento.getUsuarios());
+            bw.write(linea);
+            bw.newLine();
+        } catch (IOException e) {
+            System.err.println("Error al escribir en el archivo CSV: " + e.getMessage());
+        }
+    }
+
+    public static void sobrescribirDepartamentos(List<Departamento> departamentos) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(RUTA_DEPARTAMENTOS))) {
+            // Escribir encabezados (si los tienes)
+            bw.write("ID,Nombre,Descripción,Usuarios"); // Asegúrate de que coincida con tu formato de archivo
+            bw.newLine();
+
+            for (Departamento departamento : departamentos) {
+                String linea = departamento.getId() + "," +
+                        departamento.getNombre() + "," +
+                        departamento.getDescripcion() + "," +
+                        String.join(",", departamento.getUsuarios()); // Convertir la lista de usuarios a un String
+                bw.write(linea);
+                bw.newLine();
+            }
+        } catch (IOException e) {
+            System.err.println("Error al escribir departamentos en el archivo CSV: " + e.getMessage());
+        }
     }
 }

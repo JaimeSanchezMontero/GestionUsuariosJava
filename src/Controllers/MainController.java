@@ -5,7 +5,7 @@ import Models.Departamento;
 import Models.Grupo;
 import Models.Rol;
 import Services.UsuarioService;
-//import Services.DepartamentoService;
+import Services.DepartamentoService;
 import Services.GrupoService;
 //import Services.RolService;
 
@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 public class MainController {
     private UsuarioService usuarioService;
     private GrupoService grupoService;
+    private DepartamentoService departamentoService;
 
     //    private DepartamentoService departamentoService;
 //    private GrupoService grupoService;
@@ -27,6 +28,7 @@ public class MainController {
     public MainController() {
         usuarioService = new UsuarioService();
         grupoService = new GrupoService();
+        departamentoService = new DepartamentoService();
 //        departamentoService = new DepartamentoService();
 //        grupoService = new GrupoService();
 //        rolService = new RolService();
@@ -45,7 +47,7 @@ public class MainController {
                     manejarUsuarios();
                     break;
                 case 2:
-//                    manejarDepartamentos();
+                    manejarDepartamentos();
                     break;
                 case 3:
                     manejarGrupos();
@@ -491,6 +493,191 @@ public class MainController {
         }
     }
 
+    //////////////////////////////////METODOS PARA DEPARTAMENTO////////////////////////////////
 
+    private void manejarDepartamentos() {
+        System.out.println("\n---- Gestión de Departamentos ----");
+        int opcion;
+        do {
+            mostrarMenuDepartamentos();
+            opcion = scanner.nextInt();
+            scanner.nextLine(); // Consumir la nueva línea
+
+            switch (opcion) {
+                case 1:
+                    mostrarDepartamentos();
+                    break;
+                case 2:
+                    buscarDepartamentoPorId();
+                    break;
+                case 3:
+                    buscarDepartamentosPorNombre();
+                    break;
+                case 4:
+                    buscarDepartamentosPorUsuario();
+                case 5:
+                    crearDepartamento();
+                case 6:
+                    actualizarDepartamento();
+                    break;
+                case 7:
+                    eliminarDepartamento();
+                    break;
+                case 0:
+                    System.out.println("Volviendo al menú principal...");
+                    break;
+                default:
+                    System.out.println("Opción no válida. Por favor, intenta de nuevo.");
+            }
+        } while (opcion != 0);
+    }
+
+    private void mostrarMenuDepartamentos() {
+        System.out.println("\n---- Menú de Departamentos ----");
+        System.out.println("1. Listar todos los departamentos");
+        System.out.println("2. Buscar departamento por ID");
+        System.out.println("3. Buscar departamento por nombre");
+        System.out.println("4. Buscar departamento por usuario");
+        System.out.println("5. Crear nuevo departamento");
+        System.out.println("6. Actualizar departamento");
+        System.out.println("7. Eliminar departamento");
+        System.out.println("0. Volver");
+        System.out.print("Elige una opción: ");
+    }
+
+
+    private void mostrarDepartamentos() {
+        List<Departamento> departamentos = departamentoService.obtenerTodosLosDepartamentos();
+        System.out.println("Lista de Departamentos:");
+        for (Departamento departamento : departamentos) {
+            System.out.println(departamento);
+        }
+    }
+
+    private void buscarDepartamentoPorId() {
+        System.out.print("Introduce el ID del departamento a buscar: ");
+        int id = scanner.nextInt();
+        Departamento departamento = departamentoService.buscarDepartamentoPorId(id);
+        if (departamento != null) {
+            System.out.println("Departamento encontrado: " + departamento);
+        } else {
+            System.out.println("Departamento no encontrado.");
+        }
+    }
+
+
+    private void buscarDepartamentosPorNombre() {
+        System.out.print("Introduce el nombre del departamento a buscar: ");
+        String nombre = scanner.nextLine();
+
+        // Llama al servicio para buscar los departamentos por nombre
+        List<Departamento> departamentos = departamentoService.buscarDepartamentosPorNombre(nombre);
+
+        if (departamentos.isEmpty()) {
+            System.out.println("No se encontraron departamentos que coincidan con el nombre proporcionado.");
+        } else {
+            System.out.println("Departamentos encontrados:");
+            for (Departamento departamento : departamentos) {
+                System.out.println(departamento);
+            }
+        }
+    }
+
+    private void buscarDepartamentosPorUsuario() {
+        System.out.print("Introduce el ID del usuario: ");
+        int usuarioId = scanner.nextInt();
+        scanner.nextLine();  // Limpiar el buffer del scanner
+
+        // Llama al servicio para obtener los departamentos por usuario
+        List<Departamento> departamentos = departamentoService.obtenerDepartamentosPorUsuario(usuarioId);
+
+        // Comprobar si se encontraron departamentos
+        if (departamentos.isEmpty()) {
+            System.out.println("No se encontraron departamentos para el usuario con ID: " + usuarioId);
+        } else {
+            System.out.println("Departamentos encontrados para el usuario ID " + usuarioId + ":");
+            for (Departamento departamento : departamentos) {
+                System.out.println(departamento);
+            }
+        }
+    }
+
+    private void crearDepartamento() {
+        System.out.print("Introduce el ID del nuevo departamento: ");
+        int id = scanner.nextInt();
+        scanner.nextLine(); // Limpiar el buffer
+
+        // Verifica si el departamento con el ID ingresado ya existe
+        while (departamentoService.buscarDepartamentoPorId(id) != null) {
+            System.out.println("El ID del departamento ya existe. Por favor, introduce un ID único:");
+            id = scanner.nextInt();
+            scanner.nextLine(); // Limpiar el buffer
+        }
+
+        System.out.print("Introduce el nombre del nuevo departamento: ");
+        String nombre = scanner.nextLine();
+
+        System.out.print("Introduce la descripción del nuevo departamento: ");
+        String descripcion = scanner.nextLine();
+
+        // Inicializar la lista de usuarios como vacía (puedes cambiar esto si es necesario)
+        List<String> usuarios = new ArrayList<>();
+
+        // Crear el departamento
+        Departamento nuevoDepartamento = new Departamento(id, nombre, descripcion, usuarios);
+
+        // Llamar al servicio para crear el departamento
+        departamentoService.crearDepartamento(nuevoDepartamento);
+
+        System.out.println("Departamento creado con éxito.");
+    }
+
+    private void actualizarDepartamento() {
+        System.out.print("Introduce el ID del departamento a actualizar: ");
+        int id = scanner.nextInt();
+        scanner.nextLine(); // Limpiar el buffer
+
+        // Busca el departamento por ID
+        Departamento departamento = departamentoService.buscarDepartamentoPorId(id);
+
+        if (departamento == null) {
+            System.out.println("No se encontró el departamento con ID: " + id);
+            return;
+        }
+
+        // Muestra los datos actuales del departamento
+        System.out.println("Datos actuales del departamento: " + departamento);
+
+        System.out.print("Introduce el nuevo nombre del departamento (o presiona Enter para mantener el actual): ");
+        String nuevoNombre = scanner.nextLine();
+        if (nuevoNombre.isEmpty()) {
+            nuevoNombre = departamento.getNombre(); // Mantiene el nombre actual si no se ingresa uno nuevo
+        }
+
+        System.out.print("Introduce la nueva descripción del departamento (o presiona Enter para mantener la actual): ");
+        String nuevaDescripcion = scanner.nextLine();
+        if (nuevaDescripcion.isEmpty()) {
+            nuevaDescripcion = departamento.getDescripcion(); // Mantiene la descripción actual si no se ingresa una nueva
+        }
+
+        // Crea un nuevo objeto Departamento con los datos actualizados
+        Departamento departamentoActualizado = new Departamento(id, nuevoNombre, nuevaDescripcion, departamento.getUsuarios());
+
+        // Llama al servicio para actualizar el departamento
+        departamentoService.actualizarDepartamento(departamentoActualizado);
+
+        System.out.println("Departamento actualizado con éxito.");
+    }
+
+    private void eliminarDepartamento() {
+        System.out.print("Introduce el ID del departamento a eliminar: ");
+        int id = scanner.nextInt();
+        scanner.nextLine(); // Limpiar el buffer
+
+        // Llama al servicio para eliminar el departamento
+        departamentoService.eliminarDepartamento(id);
+
+        System.out.println("Departamento eliminado con éxito.");
+    }
 }
 
