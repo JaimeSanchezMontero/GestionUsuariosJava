@@ -27,6 +27,8 @@ public class UsuarioService {
 
     public void actualizarUsuario(Usuario usuarioActualizado) {
         usuarioRepository.update(usuarioActualizado);
+        // Escribir todos los usuarios de nuevo al archivo CSV
+        CsvReader.sobreEscribirUsuarios(usuarioRepository.getUsuarios());
     }
 
     public void eliminarUsuario(int id) {

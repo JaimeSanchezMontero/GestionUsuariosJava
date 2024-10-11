@@ -37,16 +37,21 @@ public class UsuarioRepository {
         usuarios.add(usuario);
     }
 
+    public List<Usuario> getUsuarios() {
+        return usuarios; //
+    }
+
     public void update(Usuario usuarioActualizado) {
         for (int i = 0; i < usuarios.size(); i++) {
-            if (usuarios.get(i).getId() == usuarioActualizado.getId()) { // Comparar directamente como int
+            if (usuarios.get(i).getId() == usuarioActualizado.getId()) {
                 usuarios.set(i, usuarioActualizado);
                 return;
             }
         }
     }
 
-    public void delete(int id) {  // Cambiado de String a int
-        usuarios.removeIf(usuario -> usuario.getId() == id); // Comparar directamente como int
+    public void delete(int id) {
+        usuarios.removeIf(usuario -> usuario.getId() == id); // Elimina el usuario de la lista
+        CsvReader.sobreEscribirUsuarios(usuarios);  // Actualiza el archivo CSV
     }
 }

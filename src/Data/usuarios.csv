@@ -1,5 +1,7 @@
-id,nombre,email,edad,departamento
-1,Juan,juan@example.com,30,2
-2,Ana,ana@example.com,25,1
+ID,Nombre,Email,Edad,Departamentos, Grupos
+1,Juan,juan@example.com,30,2,2
+2,Ana,ana@example.com,25,1,2
 3,Carlos,carlos@example.com,40,1,2
-4,Jaime,jaime@jaime.com,30,2
+5,Pedro,pedro@pedro.com,25,1,1
+6,Luis,luis@luis.com,29,1,1
+7,Javier,javier@javier.com,47,2,1
