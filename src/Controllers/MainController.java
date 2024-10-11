@@ -1,5 +1,4 @@
 package Controllers;
-
 import Models.Usuario;
 import Models.Departamento;
 import Models.Grupo;
@@ -7,31 +6,25 @@ import Models.Rol;
 import Services.UsuarioService;
 import Services.DepartamentoService;
 import Services.GrupoService;
-//import Services.RolService;
+import Services.RolService;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class MainController {
     private UsuarioService usuarioService;
     private GrupoService grupoService;
     private DepartamentoService departamentoService;
+    private RolService rolService;
 
-    //    private DepartamentoService departamentoService;
-//    private GrupoService grupoService;
-//    private RolService rolService;
     private Scanner scanner;
 
     public MainController() {
         usuarioService = new UsuarioService();
         grupoService = new GrupoService();
         departamentoService = new DepartamentoService();
-//        departamentoService = new DepartamentoService();
-//        grupoService = new GrupoService();
-//        rolService = new RolService();
+        rolService = new RolService();
+
         scanner = new Scanner(System.in);
     }
 
@@ -53,7 +46,7 @@ public class MainController {
                     manejarGrupos();
                     break;
                 case 4:
-//                    manejarRoles();
+                    manejarRoles();
                     break;
                 case 0:
                     System.out.println("Saliendo del programa...");
@@ -208,7 +201,7 @@ public class MainController {
                 .collect(Collectors.toList());
 
         // Mostrar los grupos disponibles
-        List<Grupo> gruposDisponibles = grupoService.obtenerTodosLosGrupos(); // Asegúrate de tener un método en el servicio de grupos para obtener todos los grupos.
+        List<Grupo> gruposDisponibles = grupoService.obtenerTodosLosGrupos();
         System.out.println("Grupos disponibles:");
         for (Grupo grupo : gruposDisponibles) {
             System.out.println(grupo.getId() + ": " + grupo.getNombre());
@@ -234,8 +227,22 @@ public class MainController {
             }
         }
 
-        // Crear un nuevo usuario con la lista de departamentos y grupos
-        Usuario nuevoUsuario = new Usuario(id, nombre, email, edad, departamentos, gruposUsuario, new ArrayList<>());
+
+        // Obtener todos los roles disponibles
+        List<Rol> rolesDisponibles = rolService.obtenerTodosLosRoles();
+        System.out.println("Roles disponibles:");
+        for (Rol rol : rolesDisponibles) {
+            System.out.println(rol.getId() + ": " + rol.getNombre());
+        }
+
+        System.out.print("Introduce los IDs de los roles a asignar al usuario (separados por comas): ");
+        String rolesInput = scanner.nextLine();
+        List<String> rolesUsuario = Arrays.stream(rolesInput.split(","))
+                .map(String::trim)
+                .collect(Collectors.toList());
+
+        // Crear un nuevo usuario con la lista de departamentos, grupos y roles
+        Usuario nuevoUsuario = new Usuario(id, nombre, email, edad, departamentos, gruposUsuario, rolesUsuario);
 
         // Llamar al servicio para crear el usuario
         usuarioService.crearUsuario(nuevoUsuario);
@@ -679,5 +686,170 @@ public class MainController {
 
         System.out.println("Departamento eliminado con éxito.");
     }
+
+
+    ///////////////////////////////////////METODOS PARA ROLES//////////////////////////////////////////
+
+
+    private void manejarRoles() {
+        System.out.println("\n---- Gestión de Roles ----");
+        int opcion;
+        do {
+            mostrarMenuRoles();
+            opcion = scanner.nextInt();
+            scanner.nextLine(); // Consumir la nueva línea
+
+            switch (opcion) {
+                case 1:
+                    mostrarRoles();
+                    break;
+                case 2:
+                    buscarRolPorId();
+                    break;
+                case 3:
+                    buscarRolesPorUsuario();
+                    break;
+                case 4:
+                    crearRol();
+                    break;
+                case 5:
+                    actualizarRol();
+                    break;
+                case 6:
+                    eliminarRol();
+                    break;
+                case 0:
+                    System.out.println("Volviendo al menú principal...");
+                    break;
+                default:
+                    System.out.println("Opción no válida. Por favor, intenta de nuevo.");
+            }
+        } while (opcion != 0);
+    }
+
+    private void mostrarMenuRoles() {
+        System.out.println("\n---- Menú de Roles ----");
+        System.out.println("1. Listar todos los roles");
+        System.out.println("2. Buscar rol por ID");
+        System.out.println("3. Buscar rol por usuario");
+        System.out.println("4. Crear nuevo rol");
+        System.out.println("5. Actualizar rol");
+        System.out.println("6. Eliminar rol");
+        System.out.println("0. Volver");
+        System.out.print("Elige una opción: ");
+    }
+
+    private void mostrarRoles() {
+        List<Rol> roles = rolService.obtenerTodosLosRoles(); // Llama al servicio
+
+        if (roles.isEmpty()) {
+            System.out.println("No se encontraron roles.");
+        } else {
+            System.out.println("Lista de roles:");
+            for (Rol rol : roles) {
+                System.out.println("ID: " + rol.getId() + ", Nombre: " + rol.getNombre() + ", Permisos: " + rol.getPermisos());
+            }
+        }
+    }
+
+    private void buscarRolPorId() {
+        System.out.print("Introduce el ID del rol que quieres buscar: ");
+        int id = scanner.nextInt();
+        scanner.nextLine(); // Consumir nueva línea
+
+        Optional<Rol> rolOpt = rolService.buscarRolPorId(id);
+
+        if (rolOpt.isPresent()) {
+            Rol rol = rolOpt.get();
+            System.out.println("ID: " + rol.getId() + ", Nombre: " + rol.getNombre() + ", Permisos: " + rol.getPermisos());
+        } else {
+            System.out.println("No se encontró ningún rol con el ID: " + id);
+        }
+    }
+
+    private void buscarRolesPorUsuario() {
+        System.out.print("Introduce el ID del usuario: ");
+        int usuarioId = scanner.nextInt();
+        scanner.nextLine();
+
+        List<Rol> roles = rolService.obtenerRolesPorUsuario(usuarioId);
+
+        if (roles.isEmpty()) {
+            System.out.println("El usuario con ID " + usuarioId + " no tiene roles asignados o no existe.");
+        } else {
+            System.out.println("Roles asignados al usuario con ID " + usuarioId + ":");
+            for (Rol rol : roles) {
+                System.out.println("ID del Rol: " + rol.getId() + ", Nombre del Rol: " + rol.getNombre());
+            }
+        }
+    }
+
+    private void crearRol() {
+        System.out.print("Ingrese el ID del nuevo rol: ");
+        int id = scanner.nextInt();
+        scanner.nextLine(); // Limpiar el buffer
+
+        // Verifica si el rol con el ID ingresado ya existe
+        while (rolService.buscarRolPorId(id).isPresent()) {
+            System.out.println("El ID del rol ya existe. Por favor, introduce un ID único:");
+            id = scanner.nextInt();
+            scanner.nextLine(); // Limpiar el buffer
+        }
+
+        System.out.print("Ingrese el nombre del rol: ");
+        String nombre = scanner.nextLine().trim(); // Captura el nombre del rol
+
+        System.out.print("Ingrese los permisos del rol (separados por comas): ");
+        String permisosInput = scanner.nextLine().trim(); // Captura los permisos como una cadena
+
+        // Convertir la cadena de permisos en una lista
+        List<String> permisos = List.of(permisosInput.split(","));
+
+        // Crear el nuevo rol
+        Rol nuevoRol = new Rol(id, nombre, permisos);
+
+        // Llamar al método de crear rol en el servicio
+        rolService.crearRol(nuevoRol);
+
+        System.out.println("Rol creado exitosamente.");
+    }
+
+    private void actualizarRol() {
+        System.out.print("Ingrese el ID del rol a actualizar: ");
+        int id = Integer.parseInt(scanner.nextLine().trim()); // Captura el ID del rol
+
+        Optional<Rol> rolExistente = rolService.buscarRolPorId(id);
+
+        if (rolExistente.isPresent()) {
+            Rol rol = rolExistente.get();
+
+            System.out.print("Ingrese el nuevo nombre del rol (actual: " + rol.getNombre() + "): ");
+            String nombre = scanner.nextLine().trim(); // Captura el nuevo nombre del rol
+
+            System.out.print("Ingrese los nuevos permisos del rol (separados por comas) (actual: " + String.join(", ", rol.getPermisos()) + "): ");
+            String permisosInput = scanner.nextLine().trim(); // Captura los permisos como una cadena
+
+            // Convertir la cadena de permisos en una lista
+            List<String> permisos = List.of(permisosInput.split(","));
+
+            // Llamar al método de actualizar rol en el servicio
+            rolService.actualizarRol(new Rol(id, nombre, permisos));
+            System.out.println("Rol actualizado exitosamente.");
+        } else {
+            System.out.println("No se encontró un rol con el ID " + id);
+        }
+    }
+
+    private void eliminarRol() {
+        System.out.print("Introduce el ID del rol que deseas eliminar: ");
+        int id = scanner.nextInt();
+        scanner.nextLine();
+
+        rolService.eliminarRol(id);
+        System.out.println("Rol eliminado exitosamente.");
+    }
+
+
+
 }
 
