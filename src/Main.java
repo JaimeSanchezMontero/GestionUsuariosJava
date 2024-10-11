@@ -1,5 +1,9 @@
+import Controllers.MainController;
+
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Hello world!");
+
+        MainController mainController = new MainController();
+        mainController.iniciar();
     }
 }
